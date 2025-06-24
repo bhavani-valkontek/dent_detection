@@ -60,7 +60,7 @@ def upload_to_drive(filepath, filename, folder_id=None):
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
     
     # ✅ Load credentials from Streamlit secrets
-    credentials_info = json.loads(st.secrets["GDRIVE_SERVICE_ACCOUNT"])
+    credentials_info = st.secrets["GDRIVE_SERVICE_ACCOUNT"]
     creds = service_account.Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
 
     service = build('drive', 'v3', credentials=creds)
