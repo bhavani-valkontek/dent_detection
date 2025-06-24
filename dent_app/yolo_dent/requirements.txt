@@ -1,0 +1,9 @@
+streamlit
+ultralytics>=8.0.0
+opencv-python
+pillow
+numpy
+requests
+google-auth-oauthlib
+google-api-python-client
+google-auth
