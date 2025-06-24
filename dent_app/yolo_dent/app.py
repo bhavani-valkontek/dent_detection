@@ -61,15 +61,27 @@ def upload_to_drive(filepath, filename, folder_id=None):
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
     creds = None
 
-    # Load token if available
     if os.path.exists('token.pkl'):
         with open('token.pkl', 'rb') as token:
             creds = pickle.load(token)
 
-    # Authenticate if needed
     if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file('streamlit_dent.json', SCOPES)
+        client_config = {
+            "installed": {
+                "client_id": st.secrets["GOOGLE_CLIENT_ID"],
+                "client_secret": st.secrets["GOOGLE_CLIENT_SECRET"],
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": ["http://localhost"]
+            }
+        }
+
+        with open("client_secrets_temp.json", "w") as f:
+            json.dump(client_config, f)
+
+        flow = InstalledAppFlow.from_client_secrets_file("client_secrets_temp.json", SCOPES)
         creds = flow.run_local_server(port=0)
+
         with open('token.pkl', 'wb') as token:
             pickle.dump(creds, token)
 
@@ -91,10 +103,10 @@ st.set_page_config(page_title="YOLOv8 Dent Detection", layout="centered")
 st.title("🔍 Dent Detection using YOLOv8")
 st.markdown("Upload an image and let the model detect car dents.")
 
-# Hugging Face model URL (📌 update this to your actual Hugging Face URL)
+# 🔗 Hugging Face model URL (update to your correct one)
 hf_model_url = "https://huggingface.co/babbilibhavani/scartch_detection/resolve/main/best_model.pt"
 
-# Load model once
+# Download model from Hugging Face
 with st.spinner("📦 Downloading model from Hugging Face..."):
     try:
         model_file = download_model_from_huggingface(hf_model_url, "best_model.pt")
@@ -116,30 +128,24 @@ if image_file:
 
         output_image, detections = run_inference(tmp_img_path, model_file, conf_threshold)
         st.subheader("📊 Detection Results")
-
-        # Show image
         st.image(output_image, caption="🖼️ Detected Image", channels="BGR", use_container_width=True)
 
-        # Save output image
         output_image_path = "dent_detection_output.jpg"
         cv2.imwrite(output_image_path, output_image)
 
         if detections:
-            # ✅ Save JSON
             json_path = "detection_results.json"
             with open(json_path, "w") as f:
                 json.dump(detections, f, indent=2)
 
-            # 💾 Download buttons
             st.download_button("⬇️ Download Results (JSON)", data=json.dumps(detections, indent=2),
                                file_name="detection_results.json", mime="application/json")
             with open(output_image_path, "rb") as img_file:
                 st.download_button("⬇️ Download Output Image", img_file.read(),
                                    file_name="dent_detection_output.jpg", mime="image/jpeg")
 
-            # ☁️ Upload to Google Drive
             try:
-                folder_id = "12fhgEhNBRxx560dmBLpB64fbQJ3-lqWd"  # ⬅️ Replace with your actual folder ID
+                folder_id = "12fhgEhNBRxx560dmBLpB64fbQJ3-lqWd"  # ✅ Your actual folder ID
                 drive_file_id = upload_to_drive(output_image_path, "dent_detection_output.jpg", folder_id)
                 st.success(f"✅ Output image uploaded to Google Drive. File ID: {drive_file_id}")
             except Exception as e:
