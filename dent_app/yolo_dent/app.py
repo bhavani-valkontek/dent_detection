@@ -7,11 +7,10 @@ import tempfile
 import json
 from PIL import Image
 import os
-import pickle
 import requests
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account  # ✅ NEW
 
 # ===============================
 # 🎯 Download model from Hugging Face
@@ -55,35 +54,14 @@ def run_inference(image_path, model_path, conf_threshold):
     return image_draw, detection_data
 
 # ====================================
-# ☁️ Upload File to Google Drive API
+# ☁️ Upload File to Google Drive (Service Account)
 # ====================================
 def upload_to_drive(filepath, filename, folder_id=None):
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    creds = None
-
-    if os.path.exists('token.pkl'):
-        with open('token.pkl', 'rb') as token:
-            creds = pickle.load(token)
-
-    if not creds or not creds.valid:
-        client_config = {
-            "installed": {
-                "client_id": st.secrets["GOOGLE_CLIENT_ID"],
-                "client_secret": st.secrets["GOOGLE_CLIENT_SECRET"],
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": ["http://localhost"]
-            }
-        }
-
-        with open("client_secrets_temp.json", "w") as f:
-            json.dump(client_config, f)
-
-        flow = InstalledAppFlow.from_client_secrets_file("client_secrets_temp.json", SCOPES)
-        creds = flow.run_local_server(port=0)
-
-        with open('token.pkl', 'wb') as token:
-            pickle.dump(creds, token)
+    
+    # ✅ Load credentials from Streamlit secrets
+    credentials_info = json.loads(st.secrets["GDRIVE_SERVICE_ACCOUNT"])
+    creds = service_account.Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
 
     service = build('drive', 'v3', credentials=creds)
 
@@ -92,7 +70,11 @@ def upload_to_drive(filepath, filename, folder_id=None):
         file_metadata['parents'] = [folder_id]
 
     media = MediaFileUpload(filepath, mimetype='image/jpeg')
-    uploaded = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    uploaded = service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id'
+    ).execute()
 
     return uploaded.get('id')
 
