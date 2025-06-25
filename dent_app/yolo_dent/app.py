@@ -92,7 +92,7 @@ hf_model_url = "https://huggingface.co/babbilibhavani/scartch_detection/resolve/
 with st.spinner("📦 Downloading model from Hugging Face..."):
     try:
         model_file = download_model_from_huggingface(hf_model_url, "best_model.pt")
-        st.success("✅ Model downloaded successfully!")
+        # st.success("✅ Model downloaded successfully!")
     except Exception as e:
         st.error(f"❌ Failed to download model: {e}")
         st.stop()
@@ -129,7 +129,7 @@ if image_file:
             try:
                 folder_id = "12fhgEhNBRxx560dmBLpB64fbQJ3-lqWd"  # ✅ Your actual folder ID
                 drive_file_id = upload_to_drive(output_image_path, "dent_detection_output.jpg", folder_id)
-                st.success(f"✅ Output image uploaded to Google Drive. File ID: {drive_file_id}")
+                st.success(f"✅ Output image uploaded to Google Drive")
             except Exception as e:
                 st.error(f"❌ Failed to upload to Google Drive: {e}")
         else:
