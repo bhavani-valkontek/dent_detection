@@ -86,7 +86,7 @@ st.title("🔍 Dent Detection using YOLOv8")
 st.markdown("Upload an image and let the model detect car dents.")
 
 # 🔗 Hugging Face model URL (update to your correct one)
-hf_model_url = "https://huggingface.co/babbilibhavani/dent_detection/resolve/main/best_dent_k.pt"
+hf_model_url = "https://huggingface.co/babbilibhavani/scartch_detection/resolve/main/best_model.pt"
 
 # Download model from Hugging Face
 with st.spinner("📦 Downloading model from Hugging Face..."):
